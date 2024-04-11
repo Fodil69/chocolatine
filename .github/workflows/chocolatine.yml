@@ -27,6 +27,7 @@ jobs:
           fi
 
   check_coding_style:
+    needs: check_repo_mirror
     runs-on: ubuntu-latest
     container: ghcr.io/epitech/coding-style-checker:latest
     steps:
