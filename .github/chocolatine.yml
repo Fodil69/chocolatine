@@ -1,0 +1,88 @@
+name: chocolatine workflow
+
+on:
+  push:
+    branches-ignore:
+      - 'ga-ignore-*'
+  pull_request:
+    branches-ignore:
+      - 'ga-ignore-*'
+
+env:
+  MIRROR_URL: 'git@github.com:EpitechPromo2028/B-DOP-200-LYN-2-1-chocolatine-fodil.boumerziga.git'
+  EXECUTABLES: mysh
+
+jobs:
+
+    check_repo_mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: mirror check
+        run: |
+          GITMIRROR="${{ env.MIRROR_URL }}"
+          GITMIRROR="${GITMIRROR#*:}"
+          GITMIRROR="${GITMIRROR%.git}"
+          if [[ "${GITHUB_REPOSITORY}" == "${GITMIRROR}" ]]; then
+            exit 1
+          fi
+
+  check_coding_style:
+    runs-on: ubuntu-latest
+    container: ghcr.io/epitech/coding-style-checker:latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: checking coding style
+        run: |
+          check.sh $(pwd) $(pwd)
+          if [ -f coding-style-report.log ]; then
+            cat coding-style-report.log
+            exit 1
+          fi
+
+  check_program_compilation:
+    needs: [check_coding_style]
+    runs-on: ubuntu-latest
+    container: epitechcontent/epitest-docker
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: compiling program
+        run: make
+        timeout-minutes: 2
+      - name: cleaning
+        run: make clean
+      - name: checking executables
+        run: |
+          for executable in ${EXECUTABLES//,/ }; do
+            if [ ! -x "$executable" ]; then
+              echo "::error ::$executable does not exist or is not executable"
+              exit 1
+            fi
+          done
+
+  run_tests:
+    needs: [check_program_compilation]
+    runs-on: ubuntu-latest
+    container: epitechcontent/epitest-docker
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: runing tests
+        run: make tests_run
+        timeout-minutes: 2
+
+  push_to_mirror:
+    needs: [run_tests]
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: pushing to mirror
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: ${{ env.MIRROR_URL }}
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
