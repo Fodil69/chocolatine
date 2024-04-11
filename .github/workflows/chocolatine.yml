@@ -15,16 +15,16 @@ env:
 jobs:
 
   check_repo_mirror:
-  runs-on: ubuntu-latest
-  steps:
-    - name: mirror check
-      run: |
-        GITMIRROR="${{ env.MIRROR_URL }}"
-        GITMIRROR="${GITMIRROR#*:}"
-        GITMIRROR="${GITMIRROR%.git}"
-        if [[ "${GITHUB_REPOSITORY}" == "${GITMIRROR}" ]]; then
-          exit 1
-        fi
+    runs-on: ubuntu-latest
+    steps:
+      - name: mirror check
+        run: |
+          GITMIRROR="${{ env.MIRROR_URL }}"
+          GITMIRROR="${GITMIRROR#*:}"
+          GITMIRROR="${GITMIRROR%.git}"
+          if [[ "${GITHUB_REPOSITORY}" == "${GITMIRROR}" ]]; then
+            exit 1
+          fi
 
   check_coding_style:
     runs-on: ubuntu-latest
