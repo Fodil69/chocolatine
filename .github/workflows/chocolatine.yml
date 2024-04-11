@@ -36,8 +36,8 @@ jobs:
       - name: checking coding style
         run: |
           check.sh $(pwd) $(pwd)
-          if [ -f coding-style-report.log ]; then
-            cat coding-style-report.log
+          if [ -f coding-style-reports.log ]; then
+            cat coding-style-reports.log
             exit 1
           fi
 
